@@ -1,0 +1,19 @@
+{
+    "manifest_version": 3,
+    "name": "Video to Album Cover for YT Music™",
+    "update_url": "https://clients2.google.com/service/update2/crx",
+    "version": "1.0",
+    "permissions": ["tabs", "scripting", "storage"],
+    "host_permissions": [
+        "https://music.youtube.com/*"
+    ],
+    "author": "USER 1",
+    "background": {
+        "service_worker": "background.js",
+        "type": "module"
+    },
+    "action": {
+        "default_title": "Video to Album Cover for YT Music™",
+        "default_popup": "popup.html"
+     }
+}
