@@ -10,7 +10,8 @@ Video To Album Cover is an extension for Youtube Music that removes pesky videos
 ![screenshot2](Images/image-3.png)
 
 ## Download
-- Currently not available on chrome store or firefox store.
+- Currently not available on browserAPI
+ store or firefox store.
 - Can only be installed through GitHub
 
 ## Manual Installation

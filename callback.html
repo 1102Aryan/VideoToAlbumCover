@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <script type="module">
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get("code");
+
+    if (code) {
+      chrome.runtime.sendMessage({ type: "SPOTIFY_CODE", code });
+    } else {
+      console.error("No code in URL");
+    }
+    window.close();
+  </script>
+</head>
+<body>
+  <p>Authorizing...</p>
+</body>
+</html>

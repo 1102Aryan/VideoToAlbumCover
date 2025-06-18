@@ -6,8 +6,36 @@
     <title>Video to Album Cover</title>
 </head>
 <body>
-    <div>
-        <h1>Check if pop up appears</h1>
-    </div>
+    <p id="status">Checking Spotify login...</p>
+    <script type="module">
+        window.CLIENT_ID = "a0aeb4810add4986905a6a9327ff994c";
+        import { codeForToken, redirectToSpotify } from './content.js';
+        
+
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get("code");
+
+        const status = document.getElementById("status");
+
+        if (code) {
+            codeForToken(code).then(() => {
+                status.textContent = "Spotify login complete!";
+                console.log("Spotify token exchange complete");
+                setTimeout(() => window.close(), 1000);
+            }).catch((err) => {
+                status.textContent = "Token exchange failed.";
+                console.error("Token exchange failed", err);
+            });
+        } else {
+            const token = localStorage.getItem("spotify_access_token");
+            if (!token) {
+                status.textContent = "Redirecting to Spotify...";
+                redirectToSpotify();
+            } else {
+                status.textContent = "Already logged in.";
+                window.close();
+            }
+        }
+    </script>
 </body>
 </html>
