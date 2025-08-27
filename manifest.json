@@ -1,19 +1,53 @@
 {
-    "manifest_version": 3,
-    "name": "Video to Album Cover for YT Music™",
-    "update_url": "https://clients2.google.com/service/update2/crx",
-    "version": "1.0",
-    "permissions": ["tabs", "scripting", "storage"],
-    "host_permissions": [
-        "https://music.youtube.com/*"
-    ],
-    "author": "USER 1",
-    "background": {
-        "service_worker": "background.js",
-        "type": "module"
+  "manifest_version": 3,
+  "name": "Video to Album Cover for YT Music™",
+  "version": "1.2.0",
+  "description": "Replaces video on YouTube Music with Spotify album cover",
+  "permissions": [
+    "tabs",
+    "storage",
+    "scripting",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "*://music.youtube.com/*",
+    "*://accounts.spotify.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Video to Album Cover",
+    "default_icon": {
+      "16": "drawing.png",
+      "32": "drawing.png",
+      "48": "drawing.png",
+      "128": "drawing.png",
+      "256": "drawing.png",
+      "512": "drawing.png"
     },
-    "action": {
-        "default_title": "Video to Album Cover for YT Music™",
-        "default_popup": "popup.html"
-     }
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://music.youtube.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "callback.html",
+        "blankart.jpg"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
 }

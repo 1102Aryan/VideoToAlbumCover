@@ -1,13 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video to Album Cover</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+  <title>Video to Album Cover</title>
 </head>
 <body>
-    <div>
-        <h1>Check if pop up appears</h1>
+  <div class="popup-container">
+    <!-- Header with icon and title -->
+    <div class="header">
+      <div class="icon">
+        <img src="drawing.png" width="64dp" height="64dp" alt="Extension Icon" />
+      </div>
+      <h1>Video to Album Cover</h1>
+      <p class="subtitle">Replace YouTube Music videos with Spotify album covers</p>
     </div>
+
+    <!-- Status indicator -->
+    <div class="status-container">
+      <div id="status-indicator" class="status disconnected">
+        <div class="status-dot"></div>
+        <span id="status-text">Not Connected</span>
+      </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="instructions">
+      <h3>How to use:</h3>
+      <div class="step">
+        <span class="step-number">1</span>
+        <span class="step-text">Connect to Spotify below</span>
+      </div>
+      <div class="step">
+        <span class="step-number">2</span>
+        <span class="step-text">Go to YouTube Music</span>
+      </div>
+      <div class="step">
+        <span class="step-number">3</span>
+        <span class="step-text">Play any song with a music video</span>
+      </div>
+      <div class="step">
+        <span class="step-number">4</span>
+        <span class="step-text">Video will be replaced with album art!</span>
+      </div>
+    </div>
+
+    <!-- Connection button at bottom -->
+    <div class="button-container">
+      <button id="auth-btn" class="auth-button">
+        <span class="button-icon">🔗</span>
+        <span id="button-text">Connect to Spotify</span>
+      </button>
+      <button id="disconnect-btn" class="disconnect-button hidden">
+        <span class="button-icon">🔌</span>
+        <span>Disconnect</span>
+      </button>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>Enjoy your music with beautiful album covers!</p>
+    </div>
+  </div>
+
+  <script src="popup.js" type="module"></script>
 </body>
 </html>
