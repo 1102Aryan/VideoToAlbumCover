@@ -1,0 +1,287 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 380px;
+  height: 600px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: white;
+  overflow: hidden; /* No scrolling */
+}
+
+.popup-container {
+  height: 100%;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Distribute content evenly */
+}
+
+/* Header Section - More compact */
+.header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.icon {
+  font-size: 36px;
+  margin-bottom: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 8px;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transform: translateZ(0);
+}
+
+.icon img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+}
+
+.header h1 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.subtitle {
+  font-size: 13px;
+  opacity: 0.9;
+  line-height: 1.3;
+}
+
+/* Status Section - Compact */
+.status-container {
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  font-size: 12px;
+  font-weight: 500;
+  transform: translateZ(0);
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff4444;
+  animation: pulse 2s infinite;
+}
+
+.status.connected .status-dot {
+  background: #1db954;
+}
+
+/* Checking state - Orange dot with faster pulse */
+.status.checking .status-dot,
+#status-indicator.checking .status-dot {
+  background: #FFA500;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* Instructions Section - Much more compact */
+.instructions {
+  flex: 1;
+  margin-bottom: 16px;
+}
+
+.instructions h3 {
+  font-size: 16px;
+  margin-bottom: 12px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+  transform: translateZ(0);
+}
+
+.step:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px) translateZ(0);
+}
+
+.step-number {
+  min-width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.step-text {
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+/* Button Section - Compact */
+.button-container {
+  margin-bottom: 12px;
+}
+
+.auth-button, .disconnect-button {
+  width: 100%;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  transform: translateZ(0);
+}
+
+.auth-button {
+  background: linear-gradient(135deg, #1db954, #1ed760);
+  color: white;
+  box-shadow: 0 3px 12px rgba(29, 185, 84, 0.4);
+}
+
+.auth-button:hover {
+  transform: translateY(-2px) translateZ(0);
+  box-shadow: 0 5px 16px rgba(29, 185, 84, 0.6);
+}
+
+.auth-button:active {
+  transform: translateY(0) translateZ(0);
+}
+
+.disconnect-button {
+  background: linear-gradient(135deg, #ff4444, #ff6b6b);
+  color: white;
+  box-shadow: 0 3px 12px rgba(255, 68, 68, 0.4);
+}
+
+.disconnect-button:hover {
+  transform: translateY(-2px) translateZ(0);
+  box-shadow: 0 5px 16px rgba(255, 68, 68, 0.6);
+}
+
+.button-icon {
+  font-size: 16px;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Loading state */
+.auth-button.loading {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.auth-button.loading::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* Footer - Compact */
+.footer {
+  text-align: center;
+}
+
+.footer p {
+  font-size: 11px;
+  opacity: 0.8;
+  line-height: 1.2;
+}
+
+/* Responsive adjustments for even smaller heights */
+@media (max-height: 500px) {
+  .popup-container {
+    padding: 16px;
+  }
+  
+  .header {
+    margin-bottom: 12px;
+  }
+  
+  .header h1 {
+    font-size: 18px;
+  }
+  
+  .subtitle {
+    font-size: 12px;
+  }
+  
+  .instructions {
+    margin-bottom: 12px;
+  }
+  
+  .step {
+    padding: 6px 8px;
+    margin-bottom: 6px;
+  }
+  
+  .step-text {
+    font-size: 11px;
+  }
+  
+  .auth-button, .disconnect-button {
+    padding: 10px 16px;
+  }
+}
