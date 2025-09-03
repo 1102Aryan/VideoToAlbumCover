@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Video to Album Cover for YT Music™",
-  "version": "1.2.0",
-  "description": "Replaces video on YouTube Music with Spotify album cover",
+  "name": "Video to Album Cover for YouTube & YT Music™",
+  "version": "1.3.1",
+  "description": "Replaces video on YouTube Music and YouTube with Spotify album cover for music videos",
   "permissions": [
     "tabs",
     "storage",
@@ -11,10 +11,13 @@
   ],
   "host_permissions": [
     "*://music.youtube.com/*",
-    "*://accounts.spotify.com/*"
+    "*://accounts.spotify.com/*",
+    "*://www.youtube.com/*",
+    "*://youtube.com/*",
+    "*://api.spotify.com/*"
   ],
   "background": {
-    "service_worker": "background.js"
+     "service_worker": "background.js"
   },
   "action": {
     "default_title": "Video to Album Cover",
@@ -31,7 +34,9 @@
   "content_scripts": [
     {
       "matches": [
-        "https://music.youtube.com/*"
+        "https://music.youtube.com/*",
+        "https://www.youtube.com/*",
+        "https://youtube.com/*"
       ],
       "js": [
         "content.js"

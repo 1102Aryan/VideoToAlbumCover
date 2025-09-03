@@ -97,6 +97,12 @@ body {
   background: #1db954;
 }
 
+/* Checking state - Orange dot with faster pulse */
+.status.checking .status-dot,
+#status-indicator.checking .status-dot {
+  background: #FFA500;
+}
+
 @keyframes pulse {
   0% { opacity: 1; }
   50% { opacity: 0.5; }
