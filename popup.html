@@ -1,13 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
   <title>Video to Album Cover</title>
 </head>
+
 <body>
   <div class="popup-container">
+
+    <!-- Header bar with status and settings -->
+    <div class="header-bar">
+      <div class="status-section">
+        <div id="status-indicator" class="status disconnected">
+          <div class="status-dot"></div>
+          <span id="status-text">Not Connected</span>
+        </div>
+      </div>
+
+      <button id="settings-toggle" class="settings-icon-btn">
+        <svg class="settings-icon" viewBox="0 0 24 24" fill="none">
+          <path
+            d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" />
+        </svg>
+      </button>
+
+      <!-- Settings dropdown overlay -->
+      <div id="settings-dropdown" class="settings-dropdown hidden">
+        <div class="settings-dropdown-content">
+          <div class="settings-header">
+            <span>Settings</span>
+          </div>
+          <div class="setting-item">
+            <label for="platform-select">Default Platform:</label>
+            <select id="platform-select" class="platform-select">
+              <option value="https://youtube.com">YouTube</option>
+              <option value="https://music.youtube.com">YouTube Music</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Header with icon and title -->
     <div class="header">
       <div class="icon">
@@ -15,14 +53,6 @@
       </div>
       <h1>Video to Album Cover</h1>
       <p class="subtitle">Replace YouTube Music videos with Spotify album covers</p>
-    </div>
-
-    <!-- Status indicator -->
-    <div class="status-container">
-      <div id="status-indicator" class="status disconnected">
-        <div class="status-dot"></div>
-        <span id="status-text">Not Connected</span>
-      </div>
     </div>
 
     <!-- Instructions -->
@@ -49,7 +79,6 @@
     <!-- Connection button at bottom -->
     <div class="button-container">
       <button id="auth-btn" class="auth-button">
-        <span class="button-icon">🔗</span>
         <span id="button-text">Connect to Spotify</span>
       </button>
       <button id="disconnect-btn" class="disconnect-button hidden">
@@ -66,4 +95,5 @@
 
   <script src="popup.js" type="module"></script>
 </body>
+
 </html>
