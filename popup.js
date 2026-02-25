@@ -18,14 +18,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     dropdown.style.display = 'none';
   }
 
-  // Settings toggle handler - SINGLE INSTANCE
+  // Settings toggle handler
   if (settingsToggle) {
     settingsToggle.addEventListener('click', (e) => {
       e.stopPropagation();
       e.preventDefault();
 
       if (dropdown) {
-        // Toggle visibility with explicit display control
         if (dropdown.classList.contains('hidden')) {
           dropdown.classList.remove('hidden');
           dropdown.style.display = 'block';
@@ -33,16 +32,11 @@ document.addEventListener('DOMContentLoaded', async () => {
           dropdown.classList.add('hidden');
           dropdown.style.display = 'none';
         }
-
-      } else {
-        console.error('Dropdown element not found!');
       }
     });
-  } else {
-    console.error('Settings toggle button not found!');
   }
 
-  // Close dropdown when clicking outside - SINGLE INSTANCE
+  // Close dropdown when clicking outside
   document.addEventListener('click', (e) => {
     if (!dropdown?.contains(e.target) && !settingsToggle?.contains(e.target)) {
       if (dropdown) {
@@ -52,7 +46,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Close dropdown when pressing Escape - SINGLE INSTANCE
+  // Close dropdown when pressing Escape
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && dropdown) {
       dropdown.classList.add('hidden');
@@ -139,8 +133,6 @@ document.addEventListener('DOMContentLoaded', async () => {
               }, (response) => {
                 if (chrome.runtime.lastError) {
                   console.log("Tab not ready for disconnect message:", chrome.runtime.lastError.message);
-                } else {
-                  console.log("Disconnect notification sent to tab:", tab.id);
                 }
                 tabResolve();
               });
@@ -157,29 +149,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     await Promise.all(notifyPromises);
   }
 
-  // Validates token with Spotify API
+  // FIX: Validate token DIRECTLY with Spotify API instead of via background message passing.
+  // The old approach sent a message to the background script, which added failure points
+  // (message passing timeouts, background script not ready, etc.) that could cause
+  // false positives or false negatives.
   async function validateSpotifyToken(accessToken) {
+    if (!accessToken) {
+      console.log('No access token provided for validation');
+      return false;
+    }
     try {
-      return new Promise((resolve) => {
-        const timeout = setTimeout(() => {
-          console.log('Token validation timeout');
-          resolve(false);
-        }, 5000);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-        chrome.runtime.sendMessage({
-          type: "VALIDATE_TOKEN",
-          accessToken: accessToken
-        }, (response) => {
-          clearTimeout(timeout);
-
-          if (chrome.runtime.lastError) {
-            console.error('Token validation error:', chrome.runtime.lastError);
-            resolve(false);
-          } else {
-            resolve(response?.isValid || false);
-          }
-        });
+      const response = await fetch('https://api.spotify.com/v1/me', {
+        headers: { 'Authorization': `Bearer ${accessToken}` },
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
+      console.log('Token validation response status:', response.status);
+      return response.ok;
     } catch (error) {
       console.error('Token validation error:', error);
       return false;
@@ -189,6 +179,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Try to refresh the access token using refresh token
   async function refreshAccessToken() {
     try {
+      // FIX: Consolidate refresh token lookup — check both keys but prefer spotify_refresh_token
       const { spotify_refresh_token, refresh_token } = await chrome.storage.local.get(['spotify_refresh_token', 'refresh_token']);
       const refreshToken = spotify_refresh_token || refresh_token;
 
@@ -226,17 +217,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         const data = await response.json();
         console.log('Token refresh successful');
 
-        await chrome.storage.local.set({
+        // FIX: Store under BOTH keys to keep everything in sync
+        const storageUpdate = {
           access_token: data.access_token
-        });
+        };
 
         if (data.refresh_token) {
-          await chrome.storage.local.set({
-            spotify_refresh_token: data.refresh_token,
-            refresh_token: data.refresh_token
-          });
+          storageUpdate.spotify_refresh_token = data.refresh_token;
+          storageUpdate.refresh_token = data.refresh_token;
         }
 
+        await chrome.storage.local.set(storageUpdate);
         return true;
       } else {
         const errorText = await response.text();
@@ -250,8 +241,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  // FIX: Add a lock to prevent concurrent updateConnectionStatus calls
+  let isUpdatingStatus = false;
+
   // Update connection status
   async function updateConnectionStatus() {
+    // Prevent concurrent status checks from racing
+    if (isUpdatingStatus) {
+      console.log('Status check already in progress, skipping');
+      return;
+    }
+    isUpdatingStatus = true;
+
     try {
       const { access_token, spotify_refresh_token, refresh_token } = await chrome.storage.local.get(['access_token', 'spotify_refresh_token', 'refresh_token']);
 
@@ -271,17 +272,28 @@ document.addEventListener('DOMContentLoaded', async () => {
           showConnectedState();
           return;
         } else {
-          console.log('Access token is invalid');
+          console.log('Access token is invalid or expired');
         }
       }
 
+      // Access token missing or invalid — try refresh
       if (spotify_refresh_token || refresh_token) {
         console.log('Attempting to refresh token...');
         const refreshSuccess = await refreshAccessToken();
 
         if (refreshSuccess) {
-          console.log('Token refresh successful');
-          showConnectedState();
+          // FIX: After refresh, VALIDATE the new token to make sure it actually works
+          const { access_token: newToken } = await chrome.storage.local.get(['access_token']);
+          const isNewTokenValid = await validateSpotifyToken(newToken);
+
+          if (isNewTokenValid) {
+            console.log('Refreshed token is valid');
+            showConnectedState();
+          } else {
+            console.log('Refreshed token failed validation, clearing tokens');
+            await chrome.storage.local.remove(['access_token', 'refresh_token', 'spotify_refresh_token', 'code_verifier']);
+            showNotConnectedState();
+          }
         } else {
           console.log('Token refresh failed, clearing all tokens');
           await chrome.storage.local.remove(['access_token', 'refresh_token', 'spotify_refresh_token', 'code_verifier']);
@@ -296,6 +308,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       console.error('Status check error:', error);
       await chrome.storage.local.remove(['access_token', 'refresh_token', 'spotify_refresh_token', 'code_verifier']);
       showNotConnectedState();
+    } finally {
+      isUpdatingStatus = false;
     }
   }
 
@@ -418,12 +432,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Listen for storage changes to update status in real-time
+  // FIX: Debounce storage change listener to prevent racing with ongoing checks
+  let storageChangeTimeout = null;
   chrome.storage.onChanged.addListener((changes, namespace) => {
     if (namespace === 'local' && (changes.access_token || changes.refresh_token || changes.spotify_refresh_token)) {
-      if (statusText && statusText.textContent !== 'Checking connection...') {
+      if (storageChangeTimeout) clearTimeout(storageChangeTimeout);
+      storageChangeTimeout = setTimeout(() => {
         updateConnectionStatus();
-      }
+      }, 500);
     }
   });
 
