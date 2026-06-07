@@ -1,4 +1,17 @@
-# Video To Album Cover
+<div align="center">
+  <img src="drawing.png" alt="Video To Album Cover Logo" width="120"/>
+  
+  # Video To Album Cover
+  
+  
+  
+  
+  Replace music videos with album covers
+
+  [![Chrome Web Store](https://img.shields.io/badge/Chrome_Web_Store-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white)](https://chromewebstore.google.com/detail/video-to-album-cover-for/hpdfnknolcfbimcnngknidjgpddjfhgl)[![Firefox Add-ons](https://img.shields.io/badge/Firefox_Add_ons-FF7139?style=for-the-badge&logo=firefox-browser&logoColor=white)](https://addons.mozilla.org/en-GB/firefox/addon/videotoalbum-cover-for-ytmusic/)
+  
+  [![Chrome Web Store Users](https://img.shields.io/chrome-web-store/users/YOUR_CHROME_EXTENSION_ID?style=flat-square&logo=google-chrome&logoColor=white&label=Chrome%20Users)](https://chromewebstore.google.com/detail/video-to-album-cover-for/hpdfnknolcfbimcnngknidjgpddjfhgl)
+</div>
 
 ## Description
 Transform your YouTube and YouTube Music experience by replacing distracting music videos with beautiful album artwork. Focus on the music, not the visuals.

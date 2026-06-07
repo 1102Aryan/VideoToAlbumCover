@@ -5,7 +5,6 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
-// FIXED: Updated to inject content script on BOTH YouTube and YouTube Music
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete' && tab.url) {
     const shouldInject = tab.url.includes("music.youtube.com") || 
@@ -31,15 +30,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "AUTHORIZATION_COMPLETE") {
     console.log("Authorization completed, notifying content scripts...");
     
-    // Store tokens
+    // FIX: Store tokens under BOTH keys for consistency
+    const storageUpdate = {};
     if (message.accessToken) {
-      chrome.storage.local.set({ access_token: message.accessToken });
+      storageUpdate.access_token = message.accessToken;
     }
     if (message.refreshToken) {
-      chrome.storage.local.set({ refresh_token: message.refreshToken });
+      storageUpdate.refresh_token = message.refreshToken;
+      storageUpdate.spotify_refresh_token = message.refreshToken;
     }
     
-    // FIXED: Send message to BOTH YouTube and YouTube Music tabs
+    chrome.storage.local.set(storageUpdate, () => {
+      console.log("Tokens stored from AUTHORIZATION_COMPLETE");
+    });
+    
     const urlPatterns = [
       "https://music.youtube.com/*",
       "https://www.youtube.com/*",
@@ -72,7 +76,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     const track = message.track;
 
     async function performApiFetch() {
-      // Get the token from storage
       const { access_token } = await chrome.storage.local.get(["access_token"]);
 
       if (!access_token) {
@@ -81,34 +84,85 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return;
       }
 
-      // IMPROVED: Better search query formatting
-      const q = encodeURIComponent(`track:"${track}" artist:"${artist}"`);
-      const url = `https://api.spotify.com/v1/search?q=${q}&type=track&limit=1`;
+      // FIX: First try exact match, then fall back to looser query
+      const exactQuery = encodeURIComponent(`track:"${track}" artist:"${artist}"`);
+      const exactUrl = `https://api.spotify.com/v1/search?q=${exactQuery}&type=track&limit=1`;
 
       try {
         console.log("Searching Spotify for:", artist, "-", track);
-        const res = await fetch(url, {
+        let res = await fetch(exactUrl, {
           headers: { Authorization: `Bearer ${access_token}` }
         });
 
-        if (!res.ok) {
-          console.error("Spotify API error from background script:", res.status, res.statusText);
+        if (res.status === 401) {
+          console.log("Token expired during album fetch, attempting refresh...");
+          // Try to refresh the token
+          const { spotify_refresh_token, refresh_token, CLIENT_ID } = await chrome.storage.local.get(["spotify_refresh_token", "refresh_token", "CLIENT_ID"]);
+          const refreshToken = spotify_refresh_token || refresh_token;
           
-          // If token expired, try to refresh it
-          if (res.status === 401) {
-            console.log("Token may be expired, need to re-authenticate");
+          if (refreshToken && CLIENT_ID) {
+            const refreshRes = await fetch("https://accounts.spotify.com/api/token", {
+              method: "POST",
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+              body: new URLSearchParams({
+                client_id: CLIENT_ID,
+                grant_type: "refresh_token",
+                refresh_token: refreshToken
+              })
+            });
+            
+            if (refreshRes.ok) {
+              const refreshData = await refreshRes.json();
+              const newStorageUpdate = { access_token: refreshData.access_token };
+              if (refreshData.refresh_token) {
+                newStorageUpdate.refresh_token = refreshData.refresh_token;
+                newStorageUpdate.spotify_refresh_token = refreshData.refresh_token;
+              }
+              await chrome.storage.local.set(newStorageUpdate);
+              
+              // Retry with new token
+              res = await fetch(exactUrl, {
+                headers: { Authorization: `Bearer ${refreshData.access_token}` }
+              });
+            } else {
+              console.error("Token refresh failed during album fetch");
+              sendResponse({ imageUrl: null });
+              return;
+            }
+          } else {
+            sendResponse({ imageUrl: null });
+            return;
           }
-          
+        }
+
+        if (!res.ok) {
+          console.error("Spotify API error:", res.status, res.statusText);
           sendResponse({ imageUrl: null });
           return;
         }
 
-        const data = await res.json();
-        console.log("Spotify search response:", data);
+        let data = await res.json();
+        let imageUrl = data?.tracks?.items?.[0]?.album?.images?.[0]?.url || null;
         
-        const imageUrl = data?.tracks?.items?.[0]?.album?.images?.[0]?.url || null;
+        // FIX: If exact match fails, try a looser search
+        if (!imageUrl) {
+          console.log("Exact match failed, trying loose search...");
+          const looseQuery = encodeURIComponent(`${artist} ${track}`);
+          const looseUrl = `https://api.spotify.com/v1/search?q=${looseQuery}&type=track&limit=3`;
+          
+          const { access_token: currentToken } = await chrome.storage.local.get(["access_token"]);
+          const looseRes = await fetch(looseUrl, {
+            headers: { Authorization: `Bearer ${currentToken}` }
+          });
+          
+          if (looseRes.ok) {
+            const looseData = await looseRes.json();
+            imageUrl = looseData?.tracks?.items?.[0]?.album?.images?.[0]?.url || null;
+            console.log("Loose search result:", imageUrl ? "Found" : "Not found");
+          }
+        }
+        
         console.log("Album image URL:", imageUrl);
-        
         sendResponse({ imageUrl: imageUrl });
       } catch (error) {
         console.error("Error fetching from Spotify in background:", error);
@@ -117,7 +171,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 
     performApiFetch();
-    return true; // Keep message channel open for async response
+    return true;
   }
 
   // Handle opening auth tab
@@ -141,21 +195,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
-  // Handle token storage
+  // FIX: Store tokens under BOTH keys for consistency
   if (message.type === "STORE_TOKENS") {
-    chrome.storage.local.set({
-      access_token: message.accessToken,
-      refresh_token: message.refreshToken
-    }, () => {
-      console.log("Tokens stored successfully");
+    const storageUpdate = {};
+    if (message.accessToken) {
+      storageUpdate.access_token = message.accessToken;
+    }
+    if (message.refreshToken) {
+      storageUpdate.refresh_token = message.refreshToken;
+      storageUpdate.spotify_refresh_token = message.refreshToken;
+    }
+    
+    chrome.storage.local.set(storageUpdate, () => {
+      console.log("Tokens stored successfully (both keys)");
       sendResponse({ success: true });
     });
     return true;
   }
 
-  // FIXED: Updated to forward code to ALL YouTube tabs, not just YouTube Music
+  // Forward Spotify auth code to content scripts
   if (message.type === "SPOTIFY_CODE") {
-    // Forward Spotify auth code to content script
     const urlPatterns = [
       "*://music.youtube.com/*",
       "*://www.youtube.com/*",
@@ -187,7 +246,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
-  // Handle storage access for content.js
   if (message.type === "GET_CLIENT_ID") {
     chrome.storage.local.get(["CLIENT_ID"], (res) => {
       sendResponse({ CLIENT_ID: res.CLIENT_ID });
@@ -196,14 +254,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.type === "GET_REFRESH_TOKEN") {
-    chrome.storage.local.get(["spotify_refresh_token"], (res) => {
-      sendResponse({ spotify_refresh_token: res.spotify_refresh_token });
+    // FIX: Check both keys
+    chrome.storage.local.get(["spotify_refresh_token", "refresh_token"], (res) => {
+      sendResponse({ spotify_refresh_token: res.spotify_refresh_token || res.refresh_token });
     });
     return true;
   }
 
   if (message.type === "STORE_REFRESH_TOKEN" && message.refreshToken) {
-    chrome.storage.local.set({ spotify_refresh_token: message.refreshToken }, () => {
+    // FIX: Store under both keys
+    chrome.storage.local.set({ 
+      spotify_refresh_token: message.refreshToken,
+      refresh_token: message.refreshToken 
+    }, () => {
       sendResponse({ success: true });
     });
     return true;

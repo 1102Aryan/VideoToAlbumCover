@@ -724,9 +724,24 @@
     imgElement.src = albumImage;
     const parentElement = document.getElementById("player");
     if (parentElement) {
-      const parentStyles = window.getComputedStyle(parentElement);
-      imgElement.style.width = parentStyles.width;
-      imgElement.style.height = "auto";
+      const bgSelectors = [
+        '#song-video',
+        '#player .video-stream',
+        '#player video',
+        'ytmusic-player #song-video',
+        '.ytmusic-player-page #player-page',
+      ];
+      bgSelectors.forEach(sel => {
+        const el = parentElement.querySelector(sel) || document.querySelector(sel);
+        if (el) el.style.display = 'none';
+      });
+      parentElement.style.backgroundColor = "transparent";
+      imgElement.style.width = "500px";     
+      imgElement.style.height = "500px";
+      imgElement.style.objectFit = "cover";
+      imgElement.style.borderRadius = "8px";
+      imgElement.style.display = "block";
+      imgElement.style.margin = "16px auto"; 
       parentElement.appendChild(imgElement);
       console.log("Image appended to the DOM");
     } else {
