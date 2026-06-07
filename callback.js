@@ -1,5 +1,5 @@
 const CONFIG = {
-    CLIENT_ID: "a0aeb4810add4986905a6a9327ff994c",
+    CLIENT_ID: "45f0c45f83a3446ca5be0cd9deaf2ea7",
     SPOTIFY_AUTHORIZE_URL: "https://accounts.spotify.com/authorize",
     SPOTIFY_TOKEN_URL: "https://accounts.spotify.com/api/token",
 };
